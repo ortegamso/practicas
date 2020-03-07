@@ -6,6 +6,6 @@
 
 
 # practicas
-## Esta es una recopilacion de codigos de programación
+##Ésta es una recopilación de códigos de programación.
 
-repositorio de codigos de ejemplos y/o practicas
+Repositorio de códigos de ejemplos y/o prácticas que nos permiten desarrollar sistemas.
