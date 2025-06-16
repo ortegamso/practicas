@@ -4,9 +4,9 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 // import { rateLimit } from 'express-rate-limit'; // Consider adding later for security
 import authRouter from './auth/auth.routes';
+import tradingRouter from './routes/trading/index';
 
 // Import routers (to be created later)
-// import tradingRouter from './trading/trading.routes';
 // import marketplaceRouter from './marketplace/marketplace.routes';
 
 const app: Application = express();
@@ -43,7 +43,7 @@ app.get('/health', (req: Request, res: Response) => {
 const apiVersion = '/api/v1';
 
 app.use(\`\${apiVersion}/auth\`, authRouter);
-// app.use(\`\${apiVersion}/trading\`, tradingRouter);
+app.use(\`\${apiVersion}/trading\`, tradingRouter);
 // app.use(\`\${apiVersion}/marketplace\`, marketplaceRouter);
 // ... other main routes
 
