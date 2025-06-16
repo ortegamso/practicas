@@ -3,6 +3,10 @@ import config from './config';
 import http from 'http';
 import app from './app';
 import { connectAllDBs, disconnectAllDBs } from './config/db.config';
+import { initializeKafka, shutdownKafka } from './kafka'; // Kafka setup
+import { startMarketDataFeed, stopMarketDataFeed } from './services/websocket/marketDataFeed.service';
+import { startAllDataConsumers, stopAllDataConsumers } from './kafka/consumers';
+import { connectRedis, disconnectRedis } from './redis';
 // import { setupKafka } from './config/kafka.config'; // To be implemented
 // import { setupRedis } from './config/redis.config'; // To be implemented
 
@@ -14,6 +18,10 @@ async function startServer() {
   try {
     // 1. Connect to Databases (TimescaleDB, MongoDB)
     await connectAllDBs();
+    await initializeKafka();
+    await connectRedis();
+    await startMarketDataFeed(); // Start WebSocket feeds
+    await startAllDataConsumers(); // Start Kafka Data Consumers
 
     // 2. Initialize Kafka Producers/Consumers
     // await setupKafka(); // Placeholder
@@ -49,7 +57,10 @@ Received \${signal}. Starting graceful shutdown...\`);
     // Disconnect from databases, Kafka, Redis, etc.
     // try {
     //   await disconnectAllDBs();
-    //   // await shutdownKafka();
+    //   await stopAllDataConsumers(); // Stop Kafka Data Consumers
+    //   await stopMarketDataFeed(); // Stop WebSocket feeds
+    //   await shutdownKafka();
+    //   await disconnectRedis();
     //   // await shutdownRedis();
     // } catch (shutdownError) {
     //   console.error('Error during resource cleanup:', shutdownError);
