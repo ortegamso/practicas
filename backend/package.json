@@ -1,0 +1,47 @@
+{
+  "name": "crypto-trading-backend",
+  "version": "1.0.0",
+  "description": "Backend for the crypto trading platform",
+  "main": "dist/server.js",
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev": "nodemon src/server.ts",
+    "build": "tsc",
+    "lint": "eslint . --ext .ts",
+    "test": "echo \"Error: no test specified\""
+  },
+  "keywords": ["crypto", "trading", "backend"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "kafkajs": "^2.0.0",
+    "redis": "^4.0.0",
+    "pg": "^8.7.1",
+    "mongoose": "^6.2.0",
+    "jsonwebtoken": "^8.5.1",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^10.0.0",
+    "cors": "^2.8.5",
+    "helmet": "^4.6.0",
+    "morgan": "^1.10.0",
+    "winston": "^3.3.3",
+    "ccxt": "^4.0.0"
+    # Add other necessary dependencies: typescript, @types/*, etc.
+  },
+  "devDependencies": {
+    "typescript": "^4.5.0",
+    "@types/express": "^4.17.13",
+    "@types/node": "^16.11.0",
+    "@types/jsonwebtoken": "^8.5.5",
+    "@types/bcryptjs": "^2.4.2",
+    "@types/cors": "^2.8.12",
+    "@types/morgan": "^1.9.3",
+    "nodemon": "^2.0.15",
+    "ts-node": "^10.4.0",
+    "eslint": "^8.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0"
+    # Add other dev dependencies
+  }
+}

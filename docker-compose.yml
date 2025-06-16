@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: backend_service
+    ports:
+      - "4000:4000" # Expose backend port
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules # Exclude node_modules from host volume for performance
+    env_file:
+      - .dockerenv
+      - .secrets.env
+    depends_on:
+      - timescaledb
+      - mongodb
+      - kafka
+      - redis
+    networks:
+      - app_network
+
+  frontend:
+    build: ./frontend
+    container_name: frontend_service
+    ports:
+      - "3000:3000" # Expose frontend port
+    volumes:
+      - ./frontend:/usr/src/app
+      - /usr/src/app/node_modules
+      - /usr/src/app/.next
+    env_file:
+      - .dockerenv
+    depends_on:
+      - backend
+    networks:
+      - app_network
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg14 # Use an appropriate TimescaleDB image
+    container_name: timescaledb_service
+    ports:
+      - "5432:5432" # Expose PostgreSQL port
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-crypto_trading_db}
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    networks:
+      - app_network
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_service
+    ports:
+      - "27017:27017" # Expose MongoDB port
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-secret}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-ecommerce_db}
+    networks:
+      - app_network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper_service
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - app_network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka_service
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092" # External access to Kafka
+      - "29092:29092" # Internal access for other Docker services
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0 # Optional: for faster development startup
+    networks:
+      - app_network
+
+  redis:
+    image: redis:latest
+    container_name: redis_service
+    ports:
+      - "6379:6379" # Expose Redis port
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana_service
+    ports:
+      - "3001:3000" # Expose Grafana on a different port if frontend uses 3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+    env_file:
+      - .dockerenv # For any Grafana specific env vars if needed
+    depends_on:
+      - timescaledb # Or Prometheus if you add it later
+    networks:
+      - app_network
+
+  # Placeholder for the sandbox runner service if it's managed by Docker Compose directly
+  # sandbox_runner:
+  #   build: ./sandbox-runner
+  #   container_name: sandbox_runner_service
+  #   # Configuration depends on how scripts are executed (e.g., might not need ports directly)
+  #   # May need access to Kafka or other services
+  #   networks:
+  #     - app_network
+
+volumes:
+  timescaledb_data:
+  mongodb_data:
+  redis_data:
+  grafana_data:
+
+networks:
+  app_network:
+    driver: bridge
