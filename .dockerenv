@@ -1,0 +1,31 @@
+# This file is specifically for Docker Compose to use when building/running containers.
+# It can override or complement variables defined directly in docker-compose.yml environment sections.
+
+# General Docker environment variables
+COMPOSE_PROJECT_NAME=crypto_trading_platform
+
+# Variables to be used by services in docker-compose.yml
+# These can be the same as in .env.example or specific overrides for Docker environment
+
+# Backend
+NODE_ENV=development # Can be overridden to 'production' in a prod docker-compose file
+PORT=4000
+
+# Database - TimescaleDB/PostgreSQL
+# These are referenced by docker-compose.yml for the timescaledb service
+POSTGRES_DB=crypto_trading_db
+POSTGRES_USER=user
+# POSTGRES_PASSWORD will be taken from .secrets.env if specified there and loaded
+
+# Database - MongoDB
+# These are referenced by docker-compose.yml for the mongodb service
+MONGO_ROOT_USER=root
+# MONGO_ROOT_PASSWORD will be taken from .secrets.env
+MONGO_DATABASE=ecommerce_db
+
+# Kafka (referenced in docker-compose.yml for kafka service)
+# KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+# (other Kafka specific envs if needed for the container itself)
+
+# Add any other variables that should be available to multiple containers
+# or that configure the Docker environment itself.

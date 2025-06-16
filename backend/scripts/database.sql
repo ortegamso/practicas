@@ -1,0 +1,1 @@
+-- This is a placeholder for the main database.sql, the primary one is in /scripts/database.sql
