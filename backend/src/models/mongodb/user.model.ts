@@ -18,6 +18,7 @@ export interface IUser extends Document {
   roles: UserRole[];
   isActive: boolean;
   isEmailVerified: boolean;
+  referralCode?: string;
   createdAt: Date;
   updatedAt: Date;
   // Instance methods
@@ -70,6 +71,15 @@ const UserSchema: Schema<IUser, IUserModel> = new Schema({
   isEmailVerified: {
     type: Boolean,
     default: false,
+  },
+  referralCode: {
+    type: String,
+    unique: true,
+    sparse: true, // Allows multiple nulls if not all users have a code, but if set, must be unique
+    minlength: [6, 'Referral code must be at least 6 characters.'],
+    maxlength: [12, 'Referral code cannot exceed 12 characters.'],
+    // match: [/^[a-zA-Z0-9]+$/, 'Referral code can only contain alphanumeric characters.'], // Optional: stricter validation
+    index: true,
   },
   // You might add fields like:
   // lastLogin: Date,
@@ -130,6 +140,7 @@ UserSchema.methods.comparePassword = async function (candidatePassword: string):
 UserSchema.index({ email: 1 });
 UserSchema.index({ username: 1 });
 UserSchema.index({ roles: 1 });
+UserSchema.index({ referralCode: 1 }, { unique: true, sparse: true });
 
 
 const User: IUserModel = mongoose.model<IUser, IUserModel>('User', UserSchema);
