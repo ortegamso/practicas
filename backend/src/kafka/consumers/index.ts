@@ -1,6 +1,7 @@
 import { startOrderbookConsumer, stopOrderbookConsumer } from './marketDataOrderbook.consumer';
 import { startTradeConsumer, stopTradeConsumer } from './marketDataTrade.consumer';
 import { startTickerConsumer, stopTickerConsumer } from './marketDataTicker.consumer';
+import { startOrderExecutionConsumer, stopOrderExecutionConsumer } from '../../services/trading/orderExecution.service';
 
 // Add other consumer start/stop functions here as they are created
 
@@ -10,6 +11,7 @@ export const startAllDataConsumers = async () => {
     startOrderbookConsumer(),
     startTradeConsumer(),
     startTickerConsumer(),
+    startOrderExecutionConsumer(),
     // Call other startConsumer functions here
   ]).catch(error => {
     console.error('[Kafka Consumers] Error starting one or more consumers:', error);
@@ -26,6 +28,7 @@ export const stopAllDataConsumers = async () => {
     stopOrderbookConsumer(),
     stopTradeConsumer(),
     stopTickerConsumer(),
+    stopOrderExecutionConsumer(),
     // Call other stopConsumer functions here
   ]).catch(error => {
     console.error('[Kafka Consumers] Error stopping one or more consumers:', error);

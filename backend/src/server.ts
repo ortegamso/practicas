@@ -7,6 +7,8 @@ import { initializeKafka, shutdownKafka } from './kafka'; // Kafka setup
 import { startMarketDataFeed, stopMarketDataFeed } from './services/websocket/marketDataFeed.service';
 import { startAllDataConsumers, stopAllDataConsumers } from './kafka/consumers';
 import { connectRedis, disconnectRedis } from './redis';
+import { startStrategyEngine, stopStrategyEngine } from './services/strategy-engine/engine.service';
+import { startOracleProcessor, stopOracleProcessor } from './services/oracle/oracle.service';
 // import { setupKafka } from './config/kafka.config'; // To be implemented
 // import { setupRedis } from './config/redis.config'; // To be implemented
 
@@ -22,6 +24,8 @@ async function startServer() {
     await connectRedis();
     await startMarketDataFeed(); // Start WebSocket feeds
     await startAllDataConsumers(); // Start Kafka Data Consumers
+    await startStrategyEngine(); // Start Strategy Engine
+    await startOracleProcessor(); // Start Oracle Processor
 
     // 2. Initialize Kafka Producers/Consumers
     // await setupKafka(); // Placeholder
@@ -57,6 +61,8 @@ Received \${signal}. Starting graceful shutdown...\`);
     // Disconnect from databases, Kafka, Redis, etc.
     // try {
     //   await disconnectAllDBs();
+    //   await stopOracleProcessor(); // Stop Oracle Processor
+    //   await stopStrategyEngine(); // Stop Strategy Engine
     //   await stopAllDataConsumers(); // Stop Kafka Data Consumers
     //   await stopMarketDataFeed(); // Stop WebSocket feeds
     //   await shutdownKafka();
