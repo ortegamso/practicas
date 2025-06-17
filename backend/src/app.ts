@@ -5,6 +5,9 @@ import morgan from 'morgan';
 // import { rateLimit } from 'express-rate-limit'; // Consider adding later for security
 import authRouter from './auth/auth.routes';
 import tradingRouter from './routes/trading/index';
+import storeRouter from './routes/store/index';
+import referralRouter from './routes/referrals/referral.routes';
+import supportTicketRouter from './routes/support/supportTicket.routes';
 
 // Import routers (to be created later)
 // import marketplaceRouter from './marketplace/marketplace.routes';
@@ -44,6 +47,9 @@ const apiVersion = '/api/v1';
 
 app.use(\`\${apiVersion}/auth\`, authRouter);
 app.use(\`\${apiVersion}/trading\`, tradingRouter);
+app.use(\`\${apiVersion}/store\`, storeRouter);
+app.use(\`\${apiVersion}/referrals\`, referralRouter);
+app.use(\`\${apiVersion}/support-tickets\`, supportTicketRouter);
 // app.use(\`\${apiVersion}/marketplace\`, marketplaceRouter);
 // ... other main routes
 
