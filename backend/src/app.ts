@@ -8,9 +8,9 @@ import tradingRouter from './routes/trading/index';
 import storeRouter from './routes/store/index';
 import referralRouter from './routes/referrals/referral.routes';
 import supportTicketRouter from './routes/support/supportTicket.routes';
+import marketplaceRouter from './routes/marketplace/marketplace.routes';
 
 // Import routers (to be created later)
-// import marketplaceRouter from './marketplace/marketplace.routes';
 
 const app: Application = express();
 
@@ -50,7 +50,7 @@ app.use(\`\${apiVersion}/trading\`, tradingRouter);
 app.use(\`\${apiVersion}/store\`, storeRouter);
 app.use(\`\${apiVersion}/referrals\`, referralRouter);
 app.use(\`\${apiVersion}/support-tickets\`, supportTicketRouter);
-// app.use(\`\${apiVersion}/marketplace\`, marketplaceRouter);
+app.use(\`\${apiVersion}/marketplace\`, marketplaceRouter);
 // ... other main routes
 
 // --- Not Found Handler ---
