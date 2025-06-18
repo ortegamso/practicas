@@ -179,6 +179,8 @@ class MarketDataFeedService {
         return;
     }
 
+    // TODO:LOGGING: Log when a new watch loop is initiated.
+    // TODO:METRICS: Gauge for active_websocket_subscriptions (labels: exchange, symbol, type). Increment here.
     console.log(\`[MarketDataFeedService] Initializing watch loop for \${key}\`);
     entry.lastError = undefined; // Clear previous error
 
@@ -232,6 +234,8 @@ class MarketDataFeedService {
                 messages: [{ key: entry.symbol, value: JSON.stringify(orderbook) }],
               });
             } catch (e: any) {
+              // TODO:LOGGING: Structured log for WebSocket watch error (orderbook, trades, ticker). Include exchange, symbol, error.
+              // TODO:METRICS: Increment websocket_watch_errors_total metric (labels: exchange, symbol, type).
               console.error(\`[MarketDataFeedService] Error watching orderbook for \${key}:\`, e.message);
               entry.lastError = e.message;
               // Close this specific watch loop and mark for potential restart by checkAndRestartInactiveLoops
@@ -296,6 +300,7 @@ class MarketDataFeedService {
       // No automatic retry here for init failure, checkAndRestartInactiveLoops will handle it.
     } finally {
         if (!entry.isActive || !this.isRunning) {
+            // TODO:METRICS: Gauge for active_websocket_subscriptions. Decrement here.
             console.log(\`[MarketDataFeedService] Watch loop for \${key} terminated (\isActive: \${entry.isActive}, isRunning: \${this.isRunning}).\`);
             if (entry.ccxtProExchange && entry.ccxtProExchange.close) {
                 await entry.ccxtProExchange.close().catch(e => console.error(\`Error closing WS for terminated loop \${key}\`,e));

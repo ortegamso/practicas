@@ -9,6 +9,8 @@ import storeRouter from './routes/store/index';
 import referralRouter from './routes/referrals/referral.routes';
 import supportTicketRouter from './routes/support/supportTicket.routes';
 import marketplaceRouter from './routes/marketplace/marketplace.routes';
+import analyticsRouter from './routes/analytics/analytics.routes';
+import adminUserManagementRouter from './routes/admin/userManagement.routes';
 
 // Import routers (to be created later)
 
@@ -51,6 +53,8 @@ app.use(\`\${apiVersion}/store\`, storeRouter);
 app.use(\`\${apiVersion}/referrals\`, referralRouter);
 app.use(\`\${apiVersion}/support-tickets\`, supportTicketRouter);
 app.use(\`\${apiVersion}/marketplace\`, marketplaceRouter);
+app.use(\`\${apiVersion}/analytics\`, analyticsRouter);
+app.use(\`\${apiVersion}/admin\`, adminUserManagementRouter); // Mount admin routes under /admin
 // ... other main routes
 
 // --- Not Found Handler ---
@@ -67,6 +71,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   res.status(statusCode);
+// TODO:LOGGING: Replace console.error with structured logging (Winston) here. Include trace ID, userId (if available), request details.
+// TODO:METRICS: Increment an error counter metric (e.g., http_server_errors_total) with labels for status_code, path, method.
   console.error(\`[ERROR] \${statusCode} - \${err.message} - \${req.originalUrl} - \${req.method} - \${req.ip}\`);
   console.error(err.stack); // Log stack trace for debugging
 

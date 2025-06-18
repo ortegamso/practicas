@@ -192,6 +192,7 @@ class StrategyEngineService {
 
     instance.lastEvaluation = new Date();
     const { config } = instance;
+      // TODO:LOGGING: Structured log for strategy evaluation start (strategyId, symbol).
     console.log(\`[StrategyEngine] Evaluating strategy: \${config.name} (\${config.id}) for symbol \${config.symbol}\`);
 
     try {
@@ -253,6 +254,8 @@ class StrategyEngineService {
           topic: KAFKA_TRADING_SIGNALS_TOPIC,
           messages: [{ key: config.symbol, value: JSON.stringify(signalPayload) }],
         });
+        // TODO:LOGGING: Structured log for signal publication.
+        // TODO:METRICS: Increment signals_published_total metric (labels: strategyId, symbol, signal_type).
         console.log(\`[StrategyEngine] Signal published for \${config.name}: \${signal} \${config.symbol} @ \${currentTicker.last}\`);
         StrategyConfigService.updateStrategyStatus(config.id.toString(), 'running', \`Signal \${signal} generated at \${new Date().toLocaleTimeString()}\`).catch(e => console.error("Failed to update strategy last signal time", e));
       }
@@ -261,10 +264,13 @@ class StrategyEngineService {
 
 
     } catch (error: any) {
+      // TODO:LOGGING: Structured log for strategy evaluation error.
+      // TODO:METRICS: Increment strategy_evaluation_errors_total metric (labels: strategyId).
       console.error(\`[StrategyEngine] Error evaluating strategy \${config.name} (\${config.id}):\`, error.message);
       instance.consecutiveErrors++;
       StrategyConfigService.updateStrategyStatus(config.id.toString(), 'error', \`Evaluation error: \${error.message}\`).catch(e=> {});
       if (instance.consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+        // TODO:LOGGING: CRITICAL: Structured log for strategy being auto-stopped due to errors. Needs alerting.
         console.error(\`[StrategyEngine] Strategy \${config.name} (\${config.id}) exceeded max consecutive errors. Stopping instance.\`);
         this.stopStrategyInstance(config.id.toString(), \`Exceeded max consecutive errors (\${MAX_CONSECUTIVE_ERRORS}). Last error: \${error.message}\`);
       }

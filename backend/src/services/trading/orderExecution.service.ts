@@ -1,6 +1,10 @@
 import { Consumer, EachMessagePayload } from 'kafkajs';
 import { createConsumer } from '../../kafka'; // Main Kafka consumer factory
 import ExchangeService from './exchange.service'; // To place orders
+import RiskManagementService, { ProposedOrderContext } from '../risk/riskManagement.service';
+import { getRedisClient, getTickerKey, isRedisConnected } from '../../redis'; // For fetching current price if needed for USD value estimation
+import NotificationService from '../notifications/notification.service';
+import User from '../../models/mongodb/user.model'; // To fetch user details for notification
 import StrategyConfigService from './strategyConfig.service'; // To update strategy status if needed
 import { query as pgQuery } from '../../database/timescaledb'; // TimescaleDB query function
 import { AppError, HttpCode } from '../../utils/appError';
@@ -47,6 +51,7 @@ const messageHandler = async ({ topic, partition, message }: { topic: string; pa
     return;
   }
 
+  // TODO:LOGGING: Structured log for received signal (include all relevant signalData fields).
   console.log(\`[OrderExecutor] Received trading signal for \${signalData.symbol} on \${signalData.exchange}: \${signalData.signal}\`, signalData);
 
   // --- Basic Validations ---
@@ -64,45 +69,69 @@ const messageHandler = async ({ topic, partition, message }: { topic: string; pa
   }
 
 
-  // --- 1. Risk Management (Placeholder) ---
-  // TODO: Implement actual risk management checks:
-  // - Check user's available balance for the asset on the specific exchange.
-  // - Check overall portfolio exposure.
-  // - Check strategy-specific limits (e.g., max open positions, max loss per day).
-  // - Check market conditions (e.g., slippage, liquidity).
-  console.log(\`[OrderExecutor] Performing risk checks for signal on \${signalData.symbol} (placeholder)...\`);
-  const riskCheckPassed = true; // Assume passed for now
-  if (!riskCheckPassed) {
-    console.warn(\`[OrderExecutor] Risk check failed for signal on \${signalData.symbol}. Order not placed.\`);
-    // Optionally update strategy status or notify user
-    StrategyConfigService.updateStrategyStatus(signalData.strategyConfigId, 'running', \`Risk check failed for \${signalData.signal} \${signalData.symbol}\`).catch(e => {});
-    return;
+  // --- 1. Risk Management ---
+  console.log(\`[OrderExecutor] Performing pre-trade risk checks for signal on \${signalData.symbol}...\`);
+  // Estimate order value in USD (very simplified, assumes quote is USD or price is in USD)
+  // A more robust solution would use a price oracle or fetch current ticker for non-limit orders.
+  let estimatedOrderValueUSD = 0;
+  const amountToTrade = signalData.amount; // Base amount from signal
+  const price = signalData.orderType === 'limit' ? signalData.price : undefined; // Limit price from signal
+
+  if (signalData.orderType === 'limit' && price && amountToTrade) {
+    estimatedOrderValueUSD = price * amountToTrade; // Assumes price is in USD or quote is USD
+  } else if (amountToTrade && signalData.price) { // For market orders where signal might include indicative current price
+    estimatedOrderValueUSD = signalData.price * amountToTrade;
+  } else if (amountToTrade && isRedisConnected()) { // Fallback to Redis ticker for market orders
+      try {
+          const redisClient = getRedisClient();
+          const tickerKey = getTickerKey(signalData.exchange, signalData.symbol);
+          const tickerData = await redisClient.hGetAll(tickerKey);
+          if (tickerData && tickerData.last) {
+              estimatedOrderValueUSD = amountToTrade * parseFloat(tickerData.last);
+              console.log(\`[OrderExecutor] Estimated market order value using Redis ticker: \${estimatedOrderValueUSD} USD for \${amountToTrade} \${signalData.symbol}\`);
+          } else {
+              console.warn(\`[OrderExecutor] Could not get current price from Redis for \${signalData.symbol} to estimate USD value for risk check. Using 0.\`);
+          }
+      } catch (e) {
+          console.warn(\`[OrderExecutor] Error fetching ticker for USD value estimation: \${e}. Using 0.\`);
+      }
   }
+
+  const orderContextForRisk: ProposedOrderContext & { strategyId?: string, estimatedOrderValueUSD: number } = {
+    userId: signalData.userId,
+    exchangeConfigId: signalData.exchangeConfigId,
+    exchange: signalData.exchange,
+    symbol: signalData.symbol,
+    orderType: signalData.orderType || 'market',
+    side: signalData.signal.toLowerCase() as 'buy' | 'sell',
+    amount: amountToTrade || 0, // Ensure amountToTrade is defined or default to 0
+    price: price, // This is the limit price for limit orders, or undefined for market
+    strategyId: signalData.strategyConfigId,
+    estimatedOrderValueUSD: estimatedOrderValueUSD,
+  };
+
+  const riskResult = await RiskManagementService.preTradeCheck(orderContextForRisk);
+  if (!riskResult.passed) {
+    console.warn(\`[OrderExecutor] Risk check failed for signal on \${signalData.symbol}: \${riskResult.reason}\`);
+    StrategyConfigService.updateStrategyStatus(signalData.strategyConfigId, 'error', \`Risk check failed: \${riskResult.reason || 'Unknown risk reason'}\`).catch(e => {});
+    return; // Stop processing this signal
+  }
+  console.log(\`[OrderExecutor] Pre-trade risk checks passed for \${signalData.symbol}.\`);
 
   // --- 2. Determine Order Parameters ---
   const orderType = signalData.orderType || 'market'; // Default to market order
-  const amountToTrade = signalData.amount; // Use base currency amount if provided
-  // If only quoteAmount is provided for a market order, CCXT might handle it for some exchanges,
-  // or we might need to calculate base amount based on current price.
-  // For now, assume 'amount' (base currency amount) is the primary way if specified.
-  // If type is 'limit', signalData.price should be used. If market, price is not needed for createOrder.
-  const price = orderType === 'limit' ? signalData.price : undefined;
+  // amountToTrade and price are already defined above for risk check
 
-  if (orderType === 'limit' && !price) {
+  if (orderType === 'limit' && !price) { // Price is already defined from signalData.price for limit orders
       console.error(\`[OrderExecutor] Limit order signal for \${signalData.symbol} missing price.\`);
       StrategyConfigService.updateStrategyStatus(signalData.strategyConfigId, 'error', \`Limit order signal missing price for \${signalData.signal} \${signalData.symbol}\`).catch(e => {});
       return;
   }
 
-  // CCXT createOrder expects 'amount' in base currency.
-  // If only quoteAmount is provided, we would need to fetch current price and convert.
-  // This is simplified for now. Assume `amountToTrade` is correctly specified or derived.
-  if (!amountToTrade) {
-      // TODO: Logic to derive base 'amount' if only 'quoteAmount' is given,
-      // e.g., fetch ticker, calculate amount = quoteAmount / price.
-      // This adds latency and complexity (potential race conditions).
-      console.error(\`[OrderExecutor] Base currency trade amount not available for \${signalData.symbol}. quoteAmount handling not fully implemented yet.\`);
-      StrategyConfigService.updateStrategyStatus(signalData.strategyConfigId, 'error', \`Order amount calculation failed for \${signalData.signal} \${signalData.symbol}\`).catch(e => {});
+  // Ensure amountToTrade is valid (it was used in risk check, should be defined if risk check passed for non-zero amounts)
+  if (!amountToTrade && amountToTrade !== 0) { // amount can be 0 for some order types or scenarios, but typically not for market/limit buys/sells.
+      console.error(\`[OrderExecutor] Trade amount not available or invalid for \${signalData.symbol}.\`);
+      StrategyConfigService.updateStrategyStatus(signalData.strategyConfigId, 'error', \`Order amount invalid for \${signalData.signal} \${signalData.symbol}\`).catch(e => {});
       return;
   }
 
@@ -131,9 +160,13 @@ const messageHandler = async ({ topic, partition, message }: { topic: string; pa
       ccxtParams
     );
     console.log(\`[OrderExecutor] Order placed successfully for \${signalData.symbol}. Order ID: \${placedOrder.id}\`, placedOrder);
+    // TODO:LOGGING: Structured log for successful order placement.
+    // TODO:METRICS: Increment orders_placed_total metric (labels: exchange, symbol, side, type).
     StrategyConfigService.updateStrategyStatus(signalData.strategyConfigId, 'running', \`Order \${placedOrder.id} placed: \${signalData.signal} \${amountToTrade} \${signalData.symbol}\`).catch(e => {});
 
   } catch (error: any) {
+    // TODO:LOGGING: Structured log for order placement failure, include error details and signalData.
+    // TODO:METRICS: Increment order_placement_failures_total metric (labels: exchange, symbol, reason).
     console.error(\`[OrderExecutor] Failed to place order for \${signalData.symbol} via config \${signalData.exchangeConfigId}:\`, error.message);
     StrategyConfigService.updateStrategyStatus(signalData.strategyConfigId, 'error', \`Order placement failed: \${error.message}\`).catch(e => {});
     // TODO: More sophisticated error handling, e.g., retries for temporary issues, notifications.
@@ -172,6 +205,18 @@ const messageHandler = async ({ topic, partition, message }: { topic: string; pa
       ]);
       const botOrderId = dbOrder.rows[0]?.id;
       console.log(\`[OrderExecutor] Bot order \${botOrderId} logged to database for exchange order \${placedOrder.id}\`);
+
+      // --- 6. Send Trade Notification ---
+      if (placedOrder) {
+        const user = await User.findById(signalData.userId).select('email username');
+        if (user) {
+          NotificationService.sendTradeNotification(user, placedOrder).catch(err => {
+            console.error(\`[OrderExecutor] Failed to send trade notification for order \${placedOrder?.id}:\`, err);
+          });
+        } else {
+          console.warn(\`[OrderExecutor] User \${signalData.userId} not found for sending trade notification.\`);
+        }
+      }
 
       // --- 5. Log Transactions if order filled immediately (bot_transactions table) ---
       // This part is more complex as market orders might fill in parts (multiple trades).
@@ -219,6 +264,7 @@ const messageHandler = async ({ topic, partition, message }: { topic: string; pa
 
 
     } catch (dbError: any) {
+    // TODO:LOGGING: CRITICAL: Structured log for database logging failure post-order. This needs alerting.
       console.error(\`[OrderExecutor] Failed to log order/transaction to database for signal on \${signalData.symbol}:\`, dbError.message);
       // This is problematic as order was placed but not logged. Requires monitoring/reconciliation.
     }

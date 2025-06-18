@@ -60,6 +60,8 @@ const messageHandler = async ({ topic, partition, message }: EachMessagePayload)
         asks = EXCLUDED.asks;
     \`;
     // Using symbolIdPlaceholder for now
+    // TODO:METRICS: Increment kafka_messages_processed_total (labels: topic, consumer_group).
+    // TODO:METRICS: Record database insertion time (histogram: db_insertion_duration_seconds).
     await pgQuery(sql, [time, symbolIdPlaceholder, exchange, bidsJson, asksJson]);
     // console.log(\`[OrderbookConsumer] Persisted orderbook for \${orderbook.symbol} from \${exchange} at \${time.toISOString()}\`);
     if (isRedisConnected()) {
@@ -80,6 +82,8 @@ const messageHandler = async ({ topic, partition, message }: EachMessagePayload)
     }
 
   } catch (error: any) {
+    // TODO:LOGGING: Structured log for Kafka message processing error. Include topic, partition, offset, error.
+    // TODO:METRICS: Increment kafka_consumer_errors_total metric (labels: topic, consumer_group).
     console.error(\`[OrderbookConsumer] Error processing message from topic \${topic}:\`, error.message);
     // Potentially send to a dead-letter queue (DLQ) or implement other error handling
   }
