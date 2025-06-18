@@ -35,6 +35,12 @@ The backend development has progressed significantly:
 
 The backend provides a robust foundation for trading operations, user script execution, and platform management.
 
+### Testing Strategy
+
+A comprehensive testing strategy has been defined for the backend to ensure its quality and reliability. This strategy outlines the recommended testing stack (Jest, Supertest, in-memory databases), general testing principles, and a phased approach for implementing unit and integration tests across all backend modules.
+
+For detailed information, please refer to the [**Backend Testing Strategy document (`./TESTING_STRATEGY.md`)**](./TESTING_STRATEGY.md).
+
 ## Key Features (Planned)
 
 - High-frequency trading capabilities for CeFi futures.

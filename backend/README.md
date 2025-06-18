@@ -225,6 +225,31 @@ This outlines the planned development stages for the backend.
 -   **`kafka/` & `websocket/`**: Will manage real-time data pipelines from exchanges to the system.
 -   **`marketplace/` & `sandbox/`**: Will manage the trading script marketplace and secure execution of these scripts.
 
+## Testing
+
+A comprehensive testing strategy is crucial for ensuring the reliability and maintainability of the backend. Our approach combines unit, integration, and API-level tests.
+
+**Key aspects of our testing strategy include:**
+
+-   **Recommended Stack**: We primarily use Jest (with ts-jest) as the test runner and assertion library, Supertest for API integration testing, and in-memory databases (\`mongodb-memory-server\`, \`pg-mem\`) for faster, isolated database tests. External dependencies like CCXT and Nodemailer are mocked.
+-   **Test Types**:
+    -   **Unit Tests**: Focus on individual functions and service methods in isolation.
+    -   **Integration Tests**: Verify interactions between components, such as service methods with (in-memory) databases, and API endpoints (controllers/routes) using Supertest.
+    -   **API/E2E Tests**: The Postman collection (\`../postman/\`) serves as a primary tool for end-to-end API testing and scenario validation.
+-   **Structure**: Tests are typically co-located with the source code in \`__tests__\` subdirectories.
+-   **Coverage**: We aim for meaningful test coverage of critical business logic and API endpoints.
+
+For a detailed breakdown of the testing strategy, including the phased plan for test implementation, recommended tools, and specific considerations for each module, please refer to the main [**Backend Testing Strategy document (`../TESTING_STRATEGY.md`)**](../TESTING_STRATEGY.md).
+
+To run tests (once implemented):
+\`\`\`bash
+# Navigate to backend directory
+cd backend
+npm test
+npm run test:watch
+npm run test:coverage
+\`\`\`
+
 ## Contributing
 
 (Details to be added later. For now, focus on understanding the existing structure and planned phases.)
