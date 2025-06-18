@@ -21,6 +21,20 @@ The system is designed to be modular, scalable, and secure, utilizing technologi
 - **Orchestration:** Docker
 - **Monitoring:** Grafana
 
+## Backend Development Status
+
+The backend development has progressed significantly:
+
+-   **Core Infrastructure (Phase 1):** COMPLETED - Includes server setup, database connections, user authentication & JWT.
+-   **Exchange Integration & Core Trading (Phase 2):** COMPLETED - CCXT integration for exchange interaction, API key management, balance retrieval, market data fetching (tickers, order books).
+-   **Kafka & Real-time Data Processing (Phase 3):** COMPLETED - WebSocket data ingestion from exchanges, Kafka pipeline for market data (order books, trades, tickers), persistence to TimescaleDB, and Redis caching.
+-   **Strategy Engine & Oracle (Phase 4):** COMPLETED - User strategy configuration API, foundational strategy engine (loads configs, placeholder evaluation, publishes signals to Kafka), basic oracle for market insights, and an order execution service consuming signals.
+-   **E-commerce, Referrals & Support (Phase 5):** COMPLETED - Product & order management, multi-level referral system with commission tracking, and a support ticket system.
+-   **Marketplace & Sandbox (Phase 6):** COMPLETED - Script marketplace model, service & API; sandbox execution service using Docker for isolated script runs; script runner service & API to test marketplace scripts.
+-   **Advanced Features & Polish (Phase 7):** IN PROGRESS - Initial Web3 (ETH/SOL) connectivity, placeholder risk management service, basic analytics (PNL), notification service (email for welcome/trades), basic admin user management, and initial review for logging/monitoring enhancements. API documentation setup is pending.
+
+The backend provides a robust foundation for trading operations, user script execution, and platform management.
+
 ## Key Features (Planned)
 
 - High-frequency trading capabilities for CeFi futures.
