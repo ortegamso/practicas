@@ -1,0 +1,2 @@
+# This .gitkeep file ensures the 'environments' directory is tracked by Git,
+# even if it's empty initially. Store your Postman environment configurations (.json files) here.

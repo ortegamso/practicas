@@ -1,0 +1,2 @@
+# This .gitkeep file ensures the 'collections' directory is tracked by Git,
+# even if it's empty initially. Store your Postman collections (exported .json files) here.

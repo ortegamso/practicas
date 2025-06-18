@@ -1,0 +1,316 @@
+,{
+			"name": "04 - E-commerce, Referrals, Support",
+			"description": "Handles product sales, order management, referral system, and support tickets.",
+			"item": [
+				{
+					"name": "E-commerce - Products",
+					"description": "Manage and browse e-commerce products.",
+					"item": [
+						{
+							"name": "List Public Products",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/store/products?limit=5&category=trading_bot&sortBy=price&sortOrder=asc",
+									"host": ["{{baseUrl}}"],
+									"path": ["store", "products"],
+									"query": [
+										{"key": "limit", "value": "5"},
+										{"key": "category", "value": "trading_bot"},
+										{"key": "sortBy", "value": "price"},
+										{"key": "sortOrder", "value": "asc"}
+									]
+								},
+								"description": "Lists publicly available products with filtering and sorting."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						},
+						{
+							"name": "Get Product by ID or Slug (Public)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/store/products/{{created_product_slug}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["store", "products", "{{created_product_slug}}"]
+								},
+								"description": "Gets a single product by its ID or slug. Uses 'created_product_slug' from env."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						},
+						{
+							"name": "Admin: Create Product",
+							"request": {
+								"method": "POST",
+								"header": [{ "key": "Content-Type", "value": "application/json" }],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_jwt_token}}", "type": "string" }] },
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Super Trading Bot v1_{{$randomInt}}\",\n    \"description\": \"The latest and greatest trading bot!\",\n    \"longDescription\": \"This bot features advanced AI and machine learning capabilities to maximize your profits.\",\n    \"price\": 29999,\n    \"currency\": \"USD\",\n    \"category\": \"trading_bot\",\n    \"tags\": [\"ai\", \"algo\", \"btc\"],\n    \"stock\": 10,\n    \"images\": [\"https://example.com/bot_image.png\"],\n    \"isActive\": true\n}"
+								},
+								"url": { "raw": "{{baseUrl}}/store/products", "host": ["{{baseUrl}}"], "path": ["store", "products"] },
+								"description": "Admin creates a new product."
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 201 - Created\", function () { pm.response.to.have.status(201); });",
+											"var jsonData = pm.response.json();",
+											"pm.environment.set(\"created_product_id\", jsonData.id);",
+                                            "pm.environment.set(\"created_product_slug\", jsonData.slug);",
+											"console.log('Saved created_product_id: ' + jsonData.id + ', slug: ' + jsonData.slug);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							]
+						},
+						{
+							"name": "Admin: Update Product",
+							"request": {
+								"method": "PUT",
+								"header": [{ "key": "Content-Type", "value": "application/json" }],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_jwt_token}}", "type": "string" }] },
+								"body": { "mode": "raw", "raw": "{\n    \"price\": 24999,\n    \"stock\": 5,\n    \"description\": \"The latest and greatest trading bot! (Special Discounted Price)\"\n}" },
+								"url": { "raw": "{{baseUrl}}/store/products/{{created_product_id}}", "host": ["{{baseUrl}}"], "path": ["store", "products", "{{created_product_id}}"] },
+								"description": "Admin updates an existing product."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						},
+						{
+							"name": "Admin: Delete Product",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_jwt_token}}", "type": "string" }] },
+								"url": { "raw": "{{baseUrl}}/store/products/{{created_product_id}}", "host": ["{{baseUrl}}"], "path": ["store", "products", "{{created_product_id}}"] },
+								"description": "Admin deletes a product."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 204 - No Content\", function () { pm.response.to.have.status(204); });"], "type": "text/javascript" }}]
+						}
+					]
+				},
+				{
+					"name": "E-commerce - Orders",
+					"description": "Manage customer orders.",
+					"item": [
+						{
+							"name": "User: Create Order",
+							"request": {
+								"method": "POST",
+								"header": [{ "key": "Content-Type", "value": "application/json" }],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }] },
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"items\": [\n        { \"productId\": \"{{created_product_id}}\", \"quantity\": 1 }\n    ],\n    \"currency\": \"USD\",\n    \"shippingAddress\": {\n        \"fullName\": \"Test User\",\n        \"addressLine1\": \"123 Main St\",\n        \"city\": \"Anytown\",\n        \"stateOrProvince\": \"CA\",\n        \"postalCode\": \"90210\",\n        \"country\": \"USA\"\n    }\n}"
+								},
+								"url": { "raw": "{{baseUrl}}/store/orders", "host": ["{{baseUrl}}"], "path": ["store", "orders"] },
+								"description": "User creates a new order. Assumes a product was created by admin first."
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 201 - Created\", function () { pm.response.to.have.status(201); });",
+											"var jsonData = pm.response.json();",
+											"pm.environment.set(\"created_order_id\", jsonData._id);", // MongoDB _id
+                                            "pm.environment.set(\"created_order_custom_id\", jsonData.orderId);", // Custom ORD-xxxx
+											"console.log('Saved created_order_id: ' + jsonData._id + ', custom_id: ' + jsonData.orderId);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							]
+						},
+						{
+							"name": "User: List My Orders",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }] },
+								"url": { "raw": "{{baseUrl}}/store/orders?limit=5", "host": ["{{baseUrl}}"], "path": ["store", "orders"], "query": [{"key": "limit", "value": "5"}] },
+								"description": "User lists their own orders."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						},
+						{
+							"name": "User: Get My Order by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }] },
+								"url": { "raw": "{{baseUrl}}/store/orders/{{created_order_custom_id}}", "host": ["{{baseUrl}}"], "path": ["store", "orders", "{{created_order_custom_id}}"] },
+								"description": "User gets a specific order by its custom ID."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						},
+						{
+							"name": "Admin: List All Orders",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_jwt_token}}", "type": "string" }] },
+								"url": { "raw": "{{baseUrl}}/store/orders/admin/all?status=pending_payment", "host": ["{{baseUrl}}"], "path": ["store", "orders", "admin", "all"], "query": [{"key":"status", "value":"pending_payment"}] },
+								"description": "Admin lists all orders, optionally filtered by status."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						},
+						{
+							"name": "Admin: Update Order Status",
+							"request": {
+								"method": "PUT",
+								"header": [{ "key": "Content-Type", "value": "application/json" }],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_jwt_token}}", "type": "string" }] },
+								"body": { "mode": "raw", "raw": "{\n    \"status\": \"processing\",\n    \"adminNotes\": \"Payment confirmed, preparing shipment.\"\n}" },
+								"url": { "raw": "{{baseUrl}}/store/orders/admin/{{created_order_custom_id}}/status", "host": ["{{baseUrl}}"], "path": ["store", "orders", "admin", "{{created_order_custom_id}}", "status"] },
+								"description": "Admin updates the status of an order."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						}
+					]
+				},
+				{
+					"name": "Referral System",
+					"description": "Manage referrals and commissions.",
+					"item": [
+						{
+							"name": "User: Get My Referral Code",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }] },
+								"url": { "raw": "{{baseUrl}}/referrals/my-code", "host": ["{{baseUrl}}"], "path": ["referrals", "my-code"] }
+							},
+							"response": [],
+							"event": [
+                                {
+                                    "listen": "test",
+                                    "script": { "exec": [
+                                        "pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });",
+                                        "var jsonData = pm.response.json();",
+                                        "if(jsonData.referralCode) { pm.environment.set(\"created_referral_code\", jsonData.referralCode); console.log('Saved referral code: ' + jsonData.referralCode);}"
+                                        ], "type": "text/javascript" }
+                                }
+                            ]
+						},
+						{
+							"name": "User: Get My Commissions",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }] },
+								"url": { "raw": "{{baseUrl}}/referrals/my-commissions?status=pending", "host": ["{{baseUrl}}"], "path": ["referrals", "my-commissions"], "query": [{"key": "status", "value":"pending"}] }
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						},
+						{
+							"name": "Admin: Set Referral Level",
+							"request": {
+								"method": "POST",
+								"header": [{ "key": "Content-Type", "value": "application/json" }],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_jwt_token}}", "type": "string" }] },
+								"body": { "mode": "raw", "raw": "{\n    \"level\": 1,\n    \"commissionPercentage\": 10,\n    \"description\": \"Direct referral commission\",\n    \"isActive\": true\n}" },
+								"url": { "raw": "{{baseUrl}}/referrals/admin/levels", "host": ["{{baseUrl}}"], "path": ["referrals", "admin", "levels"] }
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						},
+                        {
+							"name": "Admin: Trigger Order Commission Processing",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_jwt_token}}", "type": "string" }] },
+								"url": { "raw": "{{baseUrl}}/referrals/admin/process-order/{{created_order_id}}", "host": ["{{baseUrl}}"], "path": ["referrals", "admin", "process-order", "{{created_order_id}}"] },
+                                "description": "Manually triggers commission processing for a given MongoDB Order _id. This would happen after an order is marked paid/completed."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						}
+					]
+				},
+				{
+					"name": "Support Ticket System",
+					"description": "Manage customer support tickets.",
+					"item": [
+						{
+							"name": "User: Create Support Ticket",
+							"request": {
+								"method": "POST",
+								"header": [{ "key": "Content-Type", "value": "application/json" }],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }] },
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"subject\": \"Issue with my last order #{{created_order_custom_id}}\",\n    \"initialMessage\": \"I have a problem with the order I placed. The item count is wrong.\",\n    \"category\": \"Order Issue\",\n    \"priority\": \"high\"\n}"
+								},
+								"url": { "raw": "{{baseUrl}}/support-tickets", "host": ["{{baseUrl}}"], "path": ["support-tickets"] }
+							},
+							"response": [],
+							"event": [
+                                {
+                                    "listen": "test",
+                                    "script": { "exec": [
+                                        "pm.test(\"Status code is 201 - Created\", function () { pm.response.to.have.status(201); });",
+                                        "var jsonData = pm.response.json();",
+                                        "pm.environment.set(\"created_support_ticket_id\", jsonData._id);",
+                                        "pm.environment.set(\"created_support_ticket_custom_id\", jsonData.ticketId);",
+                                        "console.log('Saved support ticket ID: ' + jsonData._id + ', Custom ID: ' + jsonData.ticketId);"
+                                        ], "type": "text/javascript" }
+                                }
+                            ]
+						},
+						{
+							"name": "User: Add Reply to My Ticket",
+							"request": {
+								"method": "POST",
+								"header": [{ "key": "Content-Type", "value": "application/json" }],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }] },
+								"body": { "mode": "raw", "raw": "{\n    \"message\": \"Thanks for the update, I will check that.\"\n}" },
+								"url": { "raw": "{{baseUrl}}/support-tickets/{{created_support_ticket_custom_id}}/replies", "host": ["{{baseUrl}}"], "path": ["support-tickets", "{{created_support_ticket_custom_id}}", "replies"] }
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						},
+						{
+							"name": "Admin: List All Tickets",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_jwt_token}}", "type": "string" }] },
+								"url": { "raw": "{{baseUrl}}/support-tickets/manage/all?status=open", "host": ["{{baseUrl}}"], "path": ["support-tickets", "manage", "all"], "query": [{"key":"status", "value":"open"}] }
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						},
+						{
+							"name": "Admin: Update Ticket (e.g., status, assign)",
+							"request": {
+								"method": "PUT",
+								"header": [{ "key": "Content-Type", "value": "application/json" }],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_jwt_token}}", "type": "string" }] },
+								"body": { "mode": "raw", "raw": "{\n    \"status\": \"pending_agent_reply\",\n    \"priority\": \"medium\",\n    \"assignedAgentId\": \"{{admin_id}}\" \n}" },
+								"url": { "raw": "{{baseUrl}}/support-tickets/manage/{{created_support_ticket_custom_id}}", "host": ["{{baseUrl}}"], "path": ["support-tickets", "manage", "{{created_support_ticket_custom_id}}"] }
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						}
+					]
+				}
+			]
+		}

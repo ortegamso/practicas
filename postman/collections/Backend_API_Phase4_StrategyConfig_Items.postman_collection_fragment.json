@@ -1,0 +1,157 @@
+,{
+			"name": "03 - Strategy Configuration",
+			"description": "Manage user-defined trading strategy configurations.",
+			"item": [
+				{
+					"name": "Create Strategy Config",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"auth": {
+							"type": "bearer",
+							"bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"My MACD Strategy BTC\",\n    \"description\": \"A simple MACD crossover strategy for BTC/USDT.\",\n    \"exchangeConfigId\": \"{{user_exchange_config_id}}\",\n    \"symbol\": \"BTC/USDT\",\n    \"parameters\": {\n        \"shortPeriod\": 12,\n        \"longPeriod\": 26,\n        \"signalPeriod\": 9,\n        \"candleInterval\": \"1h\"\n    },\n    \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/trading/strategy-configs",
+							"host": ["{{baseUrl}}"],
+							"path": ["trading", "strategy-configs"]
+						},
+						"description": "Creates a new trading strategy configuration for the authenticated user."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 - Created\", function () { pm.response.to.have.status(201); });",
+									"pm.test(\"Response contains strategy config ID\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.be.a('string');",
+									"    pm.environment.set(\"user_strategy_config_id\", jsonData.id);",
+									"    console.log('Saved user_strategy_config_id: ' + jsonData.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "List My Strategy Configs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"auth": {
+							"type": "bearer",
+							"bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/trading/strategy-configs",
+							"host": ["{{baseUrl}}"],
+							"path": ["trading", "strategy-configs"]
+						},
+						"description": "Lists all strategy configurations for the authenticated user."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }
+						}
+					]
+				},
+				{
+					"name": "Get Strategy Config by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"auth": {
+							"type": "bearer",
+							"bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/trading/strategy-configs/{{user_strategy_config_id}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["trading", "strategy-configs", "{{user_strategy_config_id}}"]
+						},
+						"description": "Retrieves a specific strategy configuration by its ID."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }
+						}
+					]
+				},
+				{
+					"name": "Update Strategy Config",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"auth": {
+							"type": "bearer",
+							"bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"My Updated MACD Strategy BTC\",\n    \"parameters\": {\n        \"shortPeriod\": 10,\n        \"longPeriod\": 24,\n        \"signalPeriod\": 8,\n        \"candleInterval\": \"4h\"\n    },\n    \"isActive\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/trading/strategy-configs/{{user_strategy_config_id}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["trading", "strategy-configs", "{{user_strategy_config_id}}"]
+						},
+						"description": "Updates an existing strategy configuration."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }
+						}
+					]
+				},
+				{
+					"name": "Delete Strategy Config",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"auth": {
+							"type": "bearer",
+							"bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/trading/strategy-configs/{{user_strategy_config_id}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["trading", "strategy-configs", "{{user_strategy_config_id}}"]
+						},
+						"description": "Deletes a strategy configuration. Ensure it's not 'running' or 'pending_start'."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Strategy might be running, so 400 is also a valid response if not stopped",
+									"pm.test(\"Status code is 204 (No Content) or 400 (Bad Request if running)\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([204, 400]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				}
+			]
+		}

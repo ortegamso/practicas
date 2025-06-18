@@ -1,0 +1,137 @@
+,{
+			"name": "06 - Admin & Analytics",
+			"description": "Administrative functions for user management and user-facing analytics.",
+			"item": [
+				{
+					"name": "Admin - User Management",
+					"description": "Manage platform users (Admin access required).",
+					"item": [
+						{
+							"name": "Admin: List All Users",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_jwt_token}}", "type": "string" }] },
+								"url": {
+									"raw": "{{baseUrl}}/admin/users?limit=5&page=1&role=user&isActive=true",
+									"host": ["{{baseUrl}}"],
+									"path": ["admin", "users"],
+									"query": [
+										{"key": "limit", "value": "5"},
+										{"key": "page", "value": "1"},
+										{"key": "role", "value": "user"},
+										{"key": "isActive", "value": "true"}
+									]
+								},
+								"description": "Admin lists all users with pagination and filtering options."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						},
+						{
+							"name": "Admin: Get User by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_jwt_token}}", "type": "string" }] },
+								"url": {
+									"raw": "{{baseUrl}}/admin/users/{{created_user_id}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["admin", "users", "{{created_user_id}}"]
+								},
+								"description": "Admin retrieves details for a specific user by their ID (uses 'created_user_id' from user registration test)."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						},
+						{
+							"name": "Admin: Update User (e.g., change roles, verify email)",
+							"request": {
+								"method": "PUT",
+								"header": [{ "key": "Content-Type", "value": "application/json" }],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_jwt_token}}", "type": "string" }] },
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"roles\": [\"user\", \"trader\"],\n    \"isEmailVerified\": true,\n    \"username\": \"updatedTestUser_{{$randomInt}}\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/users/{{created_user_id}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["admin", "users", "{{created_user_id}}"]
+								},
+								"description": "Admin updates user details like roles or email verification status."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						},
+						{
+							"name": "Admin: Set User Active Status (Deactivate)",
+							"request": {
+								"method": "PATCH",
+								"header": [{ "key": "Content-Type", "value": "application/json" }],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_jwt_token}}", "type": "string" }] },
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": false\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/users/{{created_user_id}}/status",
+									"host": ["{{baseUrl}}"],
+									"path": ["admin", "users", "{{created_user_id}}", "status"]
+								},
+								"description": "Admin deactivates a user account."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						},
+                        {
+							"name": "Admin: Set User Active Status (Activate)",
+							"request": {
+								"method": "PATCH",
+								"header": [{ "key": "Content-Type", "value": "application/json" }],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_jwt_token}}", "type": "string" }] },
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/users/{{created_user_id}}/status",
+									"host": ["{{baseUrl}}"],
+									"path": ["admin", "users", "{{created_user_id}}", "status"]
+								},
+								"description": "Admin activates a user account."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						}
+					]
+				},
+                {
+                    "name": "Analytics",
+                    "description": "User-facing analytics and reporting.",
+                    "item": [
+                        {
+                            "name": "User: Get My PNL",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }] },
+                                "url": {
+                                    "raw": "{{baseUrl}}/analytics/pnl?symbol=BTC%2FUSDT&startDate=2023-01-01T00:00:00Z&endDate=2023-12-31T23:59:59Z",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["analytics", "pnl"],
+                                    "query": [
+                                        {"key": "symbol", "value": "BTC/USDT", "disabled": true}, // Optional
+                                        {"key": "startDate", "value": "2023-01-01T00:00:00Z", "disabled": true}, // Optional
+                                        {"key": "endDate", "value": "2023-12-31T23:59:59Z", "disabled": true} // Optional
+                                    ]
+                                },
+                                "description": "Retrieves the Profit and Loss statement for the authenticated user. Query parameters for symbol and date range are optional."
+                            },
+                            "response": [],
+                            "event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+                        }
+                    ]
+                }
+			]
+		}

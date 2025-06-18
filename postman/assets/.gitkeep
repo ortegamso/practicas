@@ -1,0 +1,3 @@
+# This .gitkeep file ensures the 'assets' directory is tracked by Git,
+# even if it's empty initially. This directory can be used for Postman-related assets
+# like test data files (CSV, JSON), helper scripts, or documentation snippets referenced in descriptions.
