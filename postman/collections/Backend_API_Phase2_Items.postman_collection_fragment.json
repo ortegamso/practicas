@@ -1,0 +1,318 @@
+,{
+			"name": "02 - Exchange & Trading Data",
+			"description": "Manage user exchange API configurations and fetch trading data.",
+			"item": [
+				{
+					"name": "Exchange Configurations",
+					"description": "Manage API keys for different exchanges.",
+					"item": [
+						{
+							"name": "Create Exchange Config",
+							"request": {
+								"method": "POST",
+								"header": [
+									{ "key": "Content-Type", "value": "application/json" }
+								],
+								"auth": {
+									"type": "bearer",
+									"bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }]
+								},
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"exchangeName\": \"binance\", \n    \"friendlyName\": \"My Binance Futures\",\n    \"apiKey\": \"YOUR_BINANCE_API_KEY_HERE\",\n    \"apiSecret\": \"YOUR_BINANCE_API_SECRET_HERE\",\n    \"isTestnet\": true,\n    \"isActive\": true\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/trading/exchange-configs",
+									"host": ["{{baseUrl}}"],
+									"path": ["trading", "exchange-configs"]
+								},
+								"description": "Adds a new exchange API configuration for the authenticated user."
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 201 - Created\", function () { pm.response.to.have.status(201); });",
+											"pm.test(\"Response contains config ID\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.id).to.be.a('string');",
+											"    pm.environment.set(\"user_exchange_config_id\", jsonData.id);",
+											"    console.log('Saved user_exchange_config_id: ' + jsonData.id);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							]
+						},
+						{
+							"name": "List My Exchange Configs",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"auth": {
+									"type": "bearer",
+									"bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }]
+								},
+								"url": {
+									"raw": "{{baseUrl}}/trading/exchange-configs",
+									"host": ["{{baseUrl}}"],
+									"path": ["trading", "exchange-configs"]
+								},
+								"description": "Lists all exchange API configurations for the authenticated user."
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }
+								}
+							]
+						},
+						{
+							"name": "Get Exchange Config by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"auth": {
+									"type": "bearer",
+									"bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }]
+								},
+								"url": {
+									"raw": "{{baseUrl}}/trading/exchange-configs/{{user_exchange_config_id}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["trading", "exchange-configs", "{{user_exchange_config_id}}"]
+								},
+								"description": "Retrieves a specific exchange configuration by its ID."
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }
+								}
+							]
+						},
+						{
+							"name": "Update Exchange Config",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{ "key": "Content-Type", "value": "application/json" }
+								],
+								"auth": {
+									"type": "bearer",
+									"bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }]
+								},
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"friendlyName\": \"My Updated Binance Futures Account\",\n    \"isActive\": false\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/trading/exchange-configs/{{user_exchange_config_id}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["trading", "exchange-configs", "{{user_exchange_config_id}}"]
+								},
+								"description": "Updates an existing exchange configuration."
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }
+								}
+							]
+						},
+						{
+							"name": "Delete Exchange Config",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"auth": {
+									"type": "bearer",
+									"bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }]
+								},
+								"url": {
+									"raw": "{{baseUrl}}/trading/exchange-configs/{{user_exchange_config_id}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["trading", "exchange-configs", "{{user_exchange_config_id}}"]
+								},
+								"description": "Deletes an exchange configuration. Be careful, this is permanent."
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": { "exec": ["pm.test(\"Status code is 204 - No Content\", function () { pm.response.to.have.status(204); });"], "type": "text/javascript" }
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Wallet Management",
+					"description": "View account balances from connected exchanges.",
+					"item": [
+						{
+							"name": "Get All Wallet Balances",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"auth": {
+									"type": "bearer",
+									"bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }]
+								},
+								"url": {
+									"raw": "{{baseUrl}}/trading/wallets/all",
+									"host": ["{{baseUrl}}"],
+									"path": ["trading", "wallets", "all"]
+								},
+								"description": "Retrieves balances from all active exchange configurations for the user."
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }
+								}
+							]
+						},
+						{
+							"name": "Get Wallet Balance for Specific Config",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"auth": {
+									"type": "bearer",
+									"bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }]
+								},
+								"url": {
+									"raw": "{{baseUrl}}/trading/wallets/{{user_exchange_config_id}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["trading", "wallets", "{{user_exchange_config_id}}"]
+								},
+								"description": "Retrieves balance for a specific exchange configuration."
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Market Data",
+					"description": "Fetch market data like symbols, tickers, and order books.",
+					"item": [
+						{
+							"name": "Fetch Markets (Symbols)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"auth": {
+									"type": "bearer",
+									"bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }]
+								},
+								"url": {
+									"raw": "{{baseUrl}}/trading/market-data/{{user_exchange_config_id}}/markets",
+									"host": ["{{baseUrl}}"],
+									"path": ["trading", "market-data", "{{user_exchange_config_id}}", "markets"]
+								},
+								"description": "Fetches all available markets/symbols for a given exchange configuration."
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }
+								}
+							]
+						},
+						{
+							"name": "Fetch Ticker for Symbol",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"auth": {
+									"type": "bearer",
+									"bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }]
+								},
+								"url": {
+									"raw": "{{baseUrl}}/trading/market-data/{{user_exchange_config_id}}/ticker/BTC%2FUSDT",
+									"host": ["{{baseUrl}}"],
+									"path": ["trading", "market-data", "{{user_exchange_config_id}}", "ticker", "BTC%2FUSDT"],
+									"query": []
+								},
+								"description": "Fetches the ticker for a specific symbol (e.g., BTC/USDT)."
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }
+								}
+							]
+						},
+						{
+							"name": "Fetch Multiple Tickers",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"auth": {
+									"type": "bearer",
+									"bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }]
+								},
+								"url": {
+									"raw": "{{baseUrl}}/trading/market-data/{{user_exchange_config_id}}/tickers?symbols=BTC%2FUSDT,ETH%2FUSDT",
+									"host": ["{{baseUrl}}"],
+									"path": ["trading", "market-data", "{{user_exchange_config_id}}", "tickers"],
+									"query": [
+										{ "key": "symbols", "value": "BTC/USDT,ETH/USDT" }
+									]
+								},
+								"description": "Fetches tickers for multiple specified symbols."
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }
+								}
+							]
+						},
+						{
+							"name": "Fetch Order Book",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"auth": {
+									"type": "bearer",
+									"bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }]
+								},
+								"url": {
+									"raw": "{{baseUrl}}/trading/market-data/{{user_exchange_config_id}}/orderbook/BTC%2FUSDT?limit=10",
+									"host": ["{{baseUrl}}"],
+									"path": ["trading", "market-data", "{{user_exchange_config_id}}", "orderbook", "BTC%2FUSDT"],
+									"query": [
+										{ "key": "limit", "value": "10", "description": "Number of levels to fetch" }
+									]
+								},
+								"description": "Fetches the order book for a specific symbol with an optional limit."
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }
+								}
+							]
+						}
+					]
+				}
+			]
+		}

@@ -1,0 +1,143 @@
+,{
+			"name": "05 - Marketplace & Sandbox",
+			"description": "Manage marketplace scripts and execute them in a sandbox.",
+			"item": [
+				{
+					"name": "Marketplace Scripts",
+					"description": "Manage and browse scripts on the marketplace.",
+					"item": [
+						{
+							"name": "Author: Submit New Script",
+							"request": {
+								"method": "POST",
+								"header": [{ "key": "Content-Type", "value": "application/json" }],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }] },
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"My Python Algo v{{$randomInt}}\",\n    \"description\": \"A simple Python script for testing.\",\n    \"longDescription\": \"This script demonstrates basic market analysis using Python.\",\n    \"language\": \"python\",\n    \"code\": \"print('Hello from my Python script!')\n# Input data will be available via a predefined mechanism, e.g., reading input.json\n# import json\n# try:\n#     with open('input.json', 'r') as f:\n#         data = json.load(f)\n#     print(f'Received input: {data}')\n# except Exception as e:\n#     print(f'Error reading input: {e}')\n\",\n    \"version\": \"1.0.0\",\n    \"price\": 0,\n    \"currency\": \"USD\",\n    \"category\": \"technical_analysis\",\n    \"tags\": [\"python\", \"test\", \"example\"]\n}"
+								},
+								"url": { "raw": "{{baseUrl}}/marketplace/my-scripts", "host": ["{{baseUrl}}"], "path": ["marketplace", "my-scripts"] },
+								"description": "Authenticated user submits a new script to the marketplace."
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 201 - Created\", function () { pm.response.to.have.status(201); });",
+											"var jsonData = pm.response.json();",
+											"pm.expect(jsonData.id).to.be.a('string');",
+											"pm.environment.set(\"created_marketplace_script_id\", jsonData.id);",
+											"pm.environment.set(\"created_marketplace_script_slug\", jsonData.slug);",
+											"console.log('Saved created_marketplace_script_id: ' + jsonData.id + ', slug: ' + jsonData.slug);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							]
+						},
+						{
+							"name": "Author: List My Scripts",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }] },
+								"url": { "raw": "{{baseUrl}}/marketplace/my-scripts?limit=5&approvalStatus=pending_approval", "host": ["{{baseUrl}}"], "path": ["marketplace", "my-scripts"], "query": [{"key":"limit", "value":"5"}, {"key":"approvalStatus", "value":"pending_approval"}] },
+								"description": "Lists scripts submitted by the authenticated user."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						},
+						{
+							"name": "Author: Update My Script",
+							"request": {
+								"method": "PUT",
+								"header": [{ "key": "Content-Type", "value": "application/json" }],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }] },
+								"body": { "mode": "raw", "raw": "{\n    \"description\": \"Updated description for my Python Algo.\",\n    \"tags\": [\"python\", \"test\", \"updated\"],\n    \"isActive\": false \n}" },
+								"url": { "raw": "{{baseUrl}}/marketplace/my-scripts/{{created_marketplace_script_id}}", "host": ["{{baseUrl}}"], "path": ["marketplace", "my-scripts", "{{created_marketplace_script_id}}"] },
+								"description": "Author updates their own script."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						},
+                        {
+							"name": "Public: List Approved Scripts",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": { "raw": "{{baseUrl}}/marketplace/scripts?limit=2&category=technical_analysis", "host": ["{{baseUrl}}"], "path": ["marketplace", "scripts"], "query": [{"key":"limit", "value":"2"}, {"key":"category", "value":"technical_analysis"}] },
+								"description": "Lists publicly available (approved and active) scripts."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						},
+                        {
+							"name": "Public: Get Script by Slug",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": { "raw": "{{baseUrl}}/marketplace/scripts/{{created_marketplace_script_slug}}", "host": ["{{baseUrl}}"], "path": ["marketplace", "scripts", "{{created_marketplace_script_slug}}"] },
+								"description": "Gets a single public script by its slug."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK or 404 if not approved/active\", function () { pm.expect(pm.response.code).to.be.oneOf([200, 404]); });"], "type": "text/javascript" }}]
+						},
+						{
+							"name": "Admin: Update Script (Approve/Reject)",
+							"request": {
+								"method": "PUT",
+								"header": [{ "key": "Content-Type", "value": "application/json" }],
+								"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_jwt_token}}", "type": "string" }] },
+								"body": { "mode": "raw", "raw": "{\n    \"approvalStatus\": \"approved\",\n    \"adminFeedback\": \"Looks good! Approved.\",\n    \"isActive\": true\n}" },
+								"url": { "raw": "{{baseUrl}}/marketplace/admin/scripts/{{created_marketplace_script_id}}", "host": ["{{baseUrl}}"], "path": ["marketplace", "admin", "scripts", "{{created_marketplace_script_id}}"] },
+								"description": "Admin approves a script and makes it active."
+							},
+							"response": [],
+							"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });"], "type": "text/javascript" }}]
+						}
+					]
+				},
+                {
+                    "name": "Script Execution",
+                    "description": "Run scripts in the sandbox.",
+                    "item": [
+                        {
+                            "name": "Execute Marketplace Script (Test Run)",
+                            "request": {
+                                "method": "POST",
+                                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                                "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_jwt_token}}", "type": "string" }] },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"inputData\": { \"symbol\": \"BTC/USDT\", \"some_param\": 123 },\n    \"executionTimeoutMs\": 10000\n}"
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/marketplace/scripts/{{created_marketplace_script_id}}/execute",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["marketplace", "scripts", "{{created_marketplace_script_id}}", "execute"]
+                                },
+                                "description": "Executes an approved script (or user's own script) in the sandbox with provided input data."
+                            },
+                            "response": [],
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test(\"Status code is 200 - OK\", function () { pm.response.to.have.status(200); });",
+                                            "var jsonData = pm.response.json();",
+                                            "console.log('Script Execution Result:', jsonData);",
+                                            "pm.expect(jsonData.stdout).to.exist;",
+                                            "pm.expect(jsonData.exitCode).to.eql(0); // Expecting successful exit for basic python script"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+			]
+		}
