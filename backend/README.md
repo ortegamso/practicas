@@ -156,7 +156,7 @@ The backend serves as the central nervous system for the platform, handling:
 This outlines the planned development stages for the backend.
 
 ### Phase 1: Core Infrastructure and User Management
-*   **Status:** In Progress / Partially Complete
+*   **Status:** COMPLETED
 1.  *Setup Basic Express Server:* Implement server setup in \`server.ts\` and \`app.ts\` with essential middlewares and error handling. (COMPLETED)
 2.  *Configuration Management:* Implement configuration loading in \`config/index.ts\` using \`dotenv\`. (COMPLETED)
 3.  *Database Connectivity:* Implement connection logic for TimescaleDB (\`database/timescaledb.ts\`) and MongoDB (\`database/mongodb.ts\`). (COMPLETED)
@@ -165,7 +165,7 @@ This outlines the planned development stages for the backend.
 6.  *Create Backend README.md:* This document. (COMPLETED)
 
 ### Phase 2: Exchange Integration and Core Trading Logic
-*   **Status:** TODO
+*   **Status:** COMPLETED
 1.  *Exchange Configuration Model:* Define schema/table for \`exchange_configs\`.
 2.  *Secure API Key Management:* Services for adding/removing encrypted API keys.
 3.  *CCXT Integration Service:* \`trading/exchange.service.ts\` for CCXT methods.
@@ -173,41 +173,41 @@ This outlines the planned development stages for the backend.
 5.  *Basic Trading Routes:* Endpoints for symbols, tickers, orders.
 
 ### Phase 3: Kafka Integration & Real-time Data Processing
-*   **Status:** TODO
+*   **Status:** COMPLETED
 1.  *Kafka Setup:* Producer/consumer setup (\`kafka/index.ts\`).
 2.  *WebSocket Data Ingestion:* WebSocket clients in \`websocket/\` producing to Kafka.
 3.  *Data Persistence Consumers:* Kafka consumers in \`kafka/consumers/\` storing to TimescaleDB.
 4.  *Redis Caching:* Implement Redis connection and caching.
 
 ### Phase 4: Strategy Engine & Oracle
-*   **Status:** TODO
+*   **Status:** COMPLETED
 1.  *Strategy Configuration Model:* Define \`strategies_config\`.
 2.  *Strategy Engine Service:* \`strategy-engine/engine.service.ts\`.
 3.  *Oracle Processor:* \`oracle/oracle.service.ts\`.
 4.  *Signal Consumption & Order Execution:* Service to consume signals and execute trades.
 
 ### Phase 5: E-commerce, Referrals, and Support
-*   **Status:** TODO
+*   **Status:** COMPLETED
 1.  *E-commerce:* Models and services in \`store/\`.
 2.  *Referral System:* Models and services in \`referrals/\`.
 3.  *Support Ticket System:* Models and services in \`support/\`.
 
 ### Phase 6: Marketplace & Sandbox Integration
-*   **Status:** TODO
+*   **Status:** COMPLETED
 1.  *Marketplace Script Model:* Define \`marketplace_scripts\`.
 2.  *Marketplace Service:* \`marketplace/marketplace.service.ts\`.
 3.  *Sandbox Execution Service:* \`sandbox/sandbox.service.ts\` & \`dockerExecutor.utils.ts\`.
 4.  *Script Runner Service:* \`marketplace/scriptRunner.service.ts\`.
 
 ### Phase 7: Advanced Features & Polish
-*   **Status:** TODO
-1.  *Web3 & DeFi Integration:* \`web3/\`.
-2.  *Risk Management:* \`risk/\`.
-3.  *Analytics & Reporting:* \`analytics/\`.
-4.  *Notifications:* \`notifications/\`.
-5.  *Admin Panel Functionality*.
-6.  *Logging & Monitoring Enhancements*.
-7.  *API Documentation (Swagger/OpenAPI)*.
+*   **Status:** IN PROGRESS
+    - *Web3 & DeFi Integration (Initial Setup):* COMPLETED (ethers.js, @solana/web3.js dependencies added; config updated; Web3Service with basic ETH/SOL chain data methods).
+    - *Risk Management (Placeholders):* COMPLETED (RiskManagementService created with placeholder checks; integrated preTradeCheck into OrderExecutionService).
+    - *Analytics & Reporting (Basic Structure):* COMPLETED (AnalyticsService with simplified PNL; API endpoint for user PNL).
+    - *Notification Service (Structure & Basic Email):* COMPLETED (Nodemailer setup; NotificationService for welcome/trade emails; integrated into AuthService & OrderExecutionService).
+    - *Admin Panel Functionality (User Management - Basic):* COMPLETED (UserService for admin user ops; UserManagementController & admin routes for user listing, view, status/role updates).
+    - *Logging & Monitoring Enhancements (Review & TODOs):* COMPLETED (Reviewed key services, added TODO comments for structured logging/metrics).
+    - *API Documentation (Swagger/OpenAPI Setup - Basic):* TODO
 
 ## Key Components Overview
 
