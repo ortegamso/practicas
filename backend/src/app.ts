@@ -1,4 +1,7 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
+import swaggerJSDoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+import swaggerOptions from './config/swagger.config'; // Your Swagger definition options
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -56,6 +59,32 @@ app.use(\`\${apiVersion}/marketplace\`, marketplaceRouter);
 app.use(\`\${apiVersion}/analytics\`, analyticsRouter);
 app.use(\`\${apiVersion}/admin\`, adminUserManagementRouter); // Mount admin routes under /admin
 // ... other main routes
+
+
+// --- Swagger API Documentation Setup ---
+try {
+  const swaggerSpec = swaggerJSDoc(swaggerOptions);
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    // customCss: '.swagger-ui .topbar { display: none }', // Optional: hide topbar
+    // swaggerOptions: { // Pass various Swagger UI options
+    //   docExpansion: 'none', // 'list' (default), 'full', 'none'
+    //   filter: true,
+    //   showRequestDuration: true,
+    // }
+  }));
+  console.log(\`API documentation available at /api-docs\`);
+
+  // Optional: Serve the raw swagger.json
+  app.get('/api-docs.json', (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+  });
+
+} catch (err) {
+  console.error('Failed to initialize Swagger API documentation:', err);
+}
+// --- End Swagger API Documentation Setup ---
 
 // --- Not Found Handler ---
 // For any requests that don't match a route
