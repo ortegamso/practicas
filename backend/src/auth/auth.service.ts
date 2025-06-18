@@ -2,6 +2,7 @@ import User, { IUser, UserRole } from '../models/mongodb/user.model';
 import jwt from 'jsonwebtoken';
 import config from '../config';
 import { AppError, HttpCode } from '../utils/appError'; // To be created
+import NotificationService from '../notifications/notification.service';
 
 // Define interfaces for service method parameters
 export interface RegisterUserDto {
@@ -69,6 +70,11 @@ class AuthService {
 
     try {
       await newUser.save();
+
+    // Send welcome email (fire and forget, don't block registration on email failure)
+    NotificationService.sendWelcomeEmail({ email: newUser.email, username: newUser.username }).catch(err => {
+      console.error(\`[AuthService] Failed to send welcome email to \${newUser.email} after registration:\`, err);
+    });
     } catch (error: any) {
       // Handle Mongoose validation errors
       if (error.name === 'ValidationError') {
@@ -76,10 +82,13 @@ class AuthService {
         const messages = Object.values(error.errors).map((err: any) => err.message).join(' ');
         throw new AppError({httpCode: HttpCode.BAD_REQUEST, description: messages});
       }
+          // TODO:LOGGING: Use structured logger (Winston) for this error, include relevant context (e.g., username, email).
       console.error("Error during user save:", error);
       throw new AppError({httpCode: HttpCode.INTERNAL_SERVER_ERROR, description: 'Error registering user.'});
     }
 
+    // TODO:LOGGING: Log successful registration/login event (user ID, username). Audit log.
+    // TODO:METRICS: Increment user_registrations_total or user_logins_total metric.
     // Generate JWT
     const tokenPayload = {
       id: newUser.id,
@@ -140,6 +149,8 @@ class AuthService {
       roles: user.roles,
     };
 
+    // TODO:LOGGING: Log successful registration/login event (user ID, username). Audit log.
+    // TODO:METRICS: Increment user_registrations_total or user_logins_total metric.
     const token = jwt.sign(tokenPayload, config.jwt.secret, {
       expiresIn: config.jwt.expiresIn,
     });

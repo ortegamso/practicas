@@ -82,6 +82,19 @@ interface AppConfig {
         port: number;
         password?: string;
     };
+    web3?: {
+      ethereumRpcUrl?: string;
+      solanaRpcUrl?: string;
+    };
+    smtp?: {
+      host?: string;
+      port?: number;
+      secure?: boolean;
+      user?: string;
+      pass?: string;
+      fromAddress?: string;
+      fromName?: string;
+    };
     // Add other configurations as needed
     // e.g., exchangeApiKeys, web3RpcUrls, etc.
 }
@@ -125,6 +138,19 @@ const config: AppConfig = {
         port: parseInt(process.env.REDIS_PORT || '6379', 10),
         password: process.env.REDIS_PASSWORD,
     },
+  web3: {
+    ethereumRpcUrl: process.env.ETHEREUM_RPC_URL,
+    solanaRpcUrl: process.env.SOLANA_RPC_URL,
+  },
+  smtp: {
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '587', 10),
+    secure: process.env.SMTP_SECURE === 'true',
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+    fromAddress: process.env.EMAIL_FROM_ADDRESS || 'noreply@cryptoplatform.example',
+    fromName: process.env.EMAIL_FROM_NAME || 'Crypto Platform Notifications',
+  },
 };
 
 // Log JWT secret source for debugging in non-production
