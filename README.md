@@ -72,6 +72,30 @@ For detailed information, please refer to the [**Backend Testing Strategy docume
 
 (Instructions to be added once the core components are further developed)
 
+## Environment Configuration
+
+Proper environment configuration is essential for running the application correctly in different setups (development, testing, production). This project utilizes \`.env\` files for managing environment variables, along with a specific file for Docker configurations.
+
+### Key Configuration Files
+
+*   **\`.env.example\`**: This is a template file committed to the repository. It lists all necessary environment variables with placeholder or example values. You should copy this to a \`.env\` file for your local setup.
+    *   **Detailed Documentation**: [**Understanding .env.example and Environment Strategy (`./docs/env.example.md`)**](./docs/env.example.md)
+*   **\`.env\`**: This file (which should be in your \`.gitignore\`) is where you store your actual local development variable values.
+*   **\`.secrets.env\`**: For highly sensitive data (like production passwords or global API keys needed for local dev), also gitignored. Takes precedence over \`.env\` and \`.env.<NODE_ENV>\`.
+*   **\`.env.<NODE_ENV>\`** (e.g., \`.env.development\`): For environment-specific overrides that are not sensitive and can be committed.
+*   **\`.dockerenv\`**: Contains environment variables specifically for the Docker Compose environment and container runtime.
+    *   **Detailed Documentation**: [**Understanding the .dockerenv File (`./docs/dockerenv.md`)**](./docs/dockerenv.md)
+
+### Best Practices
+
+-   **Never commit sensitive credentials**: Files like \`.env\` or \`.secrets.env\` containing actual API keys, database passwords, or JWT secrets must **never** be committed to version control.
+-   **Use \`.env.example\` as the template**: All developers should start by copying \`.env.example\` to \`.env\` and then populating it with their local values.
+-   **Prioritize runtime environment variables in production**: For production deployments, inject variables directly into the execution environment (e.g., Docker environment settings, Kubernetes Secrets, PaaS configuration) rather than deploying \`.env\` files.
+-   **Principle of Least Privilege**: Ensure API keys and database credentials have only the minimum necessary permissions.
+-   **Rotate secrets regularly**.
+
+Please refer to the detailed markdown files linked above for an explanation of each specific variable.
+
 ## Contributing
 
 (Guidelines for contributing to the project - TBD)
