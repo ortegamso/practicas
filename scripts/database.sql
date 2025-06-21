@@ -189,3 +189,37 @@ SELECT create_hypertable('trade_signals', 'time');
 -- Note: This is a foundational schema.
 -- Further refinements, indexes, and constraints will be needed.
 -- For example, proper indexing on foreign keys and frequently queried columns.
+
+
+-- Table for storing processed Footprint Chart data
+CREATE TABLE footprints_futures (
+    id BIGSERIAL PRIMARY KEY, -- Using BIGSERIAL for potentially high volume of footprint bars
+    symbol_id INTEGER REFERENCES symbols(id) ON DELETE CASCADE, -- Foreign key to symbols table
+    exchange VARCHAR(50) NOT NULL,
+    interval_type VARCHAR(20) NOT NULL, -- e.g., '1m', '5m', '1000v' (volume), '100d' (delta)
+    start_time TIMESTAMPTZ NOT NULL,
+    end_time TIMESTAMPTZ NOT NULL,
+    open_price NUMERIC,
+    high_price NUMERIC,
+    low_price NUMERIC,
+    close_price NUMERIC,
+    total_volume NUMERIC,
+    total_delta NUMERIC,       -- Total (Ask Volume - Bid Volume) for the bar
+    poc_price NUMERIC,         -- Point of Control: Price level with the highest volume in the bar
+    value_area_high NUMERIC,   -- Highest price of the value area (e.g., 70% of volume)
+    value_area_low NUMERIC,    -- Lowest price of the value area
+    footprint_data JSONB NOT NULL, -- Stores the detailed array of price levels:
+                                   -- [{ price: X, bidVolume: Y, askVolume: Z, delta: D, imbalanceFlag: 'bid'/'ask'/null }, ...]
+    CONSTRAINT uq_footprint_bar UNIQUE (symbol_id, exchange, interval_type, start_time)
+);
+
+-- Create hypertables for footprints_futures
+SELECT create_hypertable('footprints_futures', 'start_time');
+
+-- Optional: Indexes for footprints_futures for common queries
+CREATE INDEX IF NOT EXISTS idx_footprints_symbol_exchange_interval_time
+    ON footprints_futures (symbol_id, exchange, interval_type, start_time DESC, end_time DESC);
+CREATE INDEX IF NOT EXISTS idx_footprints_exchange_interval_time
+    ON footprints_futures (exchange, interval_type, start_time DESC);
+-- Consider an index on footprint_data using GIN if querying specific content within the JSONB
+-- CREATE INDEX IF NOT EXISTS idx_footprints_data_gin ON footprints_futures USING GIN (footprint_data);
